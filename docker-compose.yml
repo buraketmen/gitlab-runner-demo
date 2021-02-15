@@ -1,0 +1,40 @@
+version: '3.5'
+services:
+    gitlab-runner:
+        image: gitlab/gitlab-runner:v13.8.0
+        hostname: gitlab-runner
+        ports:
+            - "8093:8093"
+        volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+            - "./config:/etc/gitlab-runner"
+            - "gitlab-storage:/etc/gitlab-runner"
+        environment:
+           - TZ=Europe/Istanbul
+        networks:
+            - proxy-net
+        deploy:
+            mode: global
+            placement:
+                constraints:
+                    - node.role == manager
+                preferences:
+                    - spread: node.id
+            restart_policy:
+                condition: any
+                delay: 10s
+
+volumes:
+    gitlab-storage:
+        name: gitlab-storage
+        driver: local
+        driver_opts:
+            type: "nfs4"
+            o: bind
+            device: /mnt/efs/gitlab
+
+networks:
+    proxy-net:
+        external: true
+        name: proxy-net
+        
